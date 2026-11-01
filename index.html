@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#101820">
+<title>Live from Sweden — Butler Test</title>
+<style>
+:root{color-scheme:dark;--bg:#101820;--panel:#1b2a36;--gold:#e1b84d;--muted:#aab8c5;--green:#64d69a}
+*{box-sizing:border-box}body{margin:0;background:transparent;color:#fff;font-family:Arial,Helvetica,sans-serif}
+.wrap{padding:14px;display:grid;gap:12px}
+.brand{display:flex;justify-content:space-between;align-items:center;font-weight:800;letter-spacing:1.5px;font-size:15px}
+.live{background:#bd2935;padding:5px 9px;border-radius:4px;font-size:10px;letter-spacing:1px}
+.panel{background:rgba(16,24,32,.94);border:1px solid rgba(255,255,255,.16);border-radius:13px;padding:15px;box-shadow:0 8px 28px #0008}
+.kicker{color:var(--gold);font-size:10px;font-weight:800;letter-spacing:1.8px}
+h1{font-size:24px;margin:7px 0 4px;line-height:1.1}p{margin:6px 0;color:#d5e0e8;font-size:14px;line-height:1.4}
+.row{display:flex;align-items:center;gap:10px}.orb{width:42px;height:42px;border-radius:50%;background:#30485b;display:grid;place-items:center;font-size:22px}
+.status{color:var(--green);font-size:11px;font-weight:700}
+.command{background:#233746;border-radius:9px;padding:11px;margin-top:10px}
+button{border:0;border-radius:9px;background:var(--gold);color:#14202a;font-weight:800;padding:13px 15px;font-size:14px}
+button.secondary{background:#344b5d;color:white}
+.controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+#overlay{display:none}.map{height:160px;border-radius:9px;background:linear-gradient(135deg,#243e35,#526a50);position:relative;overflow:hidden;margin-top:10px}
+.map:before,.map:after{content:"";position:absolute;border:3px solid #e8d49a;border-color:transparent transparent #e8d49a transparent;width:140%;height:110px;transform:rotate(-18deg);left:-20%;top:15px;border-radius:50%}
+.map:after{transform:rotate(30deg);top:45px;border-color:transparent transparent #d9e4ec transparent}
+.pin{position:absolute;left:54%;top:45%;font-size:25px}
+.small{font-size:11px;color:var(--muted)}
+#log{max-height:100px;overflow:auto;font-size:11px;color:#aab8c5;line-height:1.5}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand"><span>LIVE FROM SWEDEN</span><span class="live">BUTLER TEST</span></div>
+  <section class="panel">
+    <div class="row"><div class="orb">🤵</div><div><div class="kicker">YOUR AI BUTLER · PROTOTYPE</div><div class="status" id="status">READY — waiting for a command</div></div></div>
+    <div class="command"><div class="small">LAST HEARD</div><div id="heard">Try saying “Show Sweden facts”.</div></div>
+    <div id="overlay" class="command">
+      <div class="kicker" id="overlayKicker">SWEDEN EXPLAINED</div>
+      <h1 id="overlayTitle">Did you know?</h1>
+      <p id="overlayText">Sweden has thousands of lakes, forests and a long coastline.</p>
+      <div id="map" class="map hidden"><span class="pin">📍</span></div>
+    </div>
+    <div class="controls">
+      <button onclick="demo('show sweden facts')">Test facts</button>
+      <button class="secondary" onclick="demo('show the map')">Test map</button>
+      <button class="secondary" onclick="demo('hide graphics')">Hide</button>
+    </div>
+    <p class="small">Voice commands are received through Moblin when its Browser Widget speech-to-text integration is enabled. Buttons are for testing at home.</p>
+  </section>
+  <section class="panel">
+    <div class="kicker">ACTIVITY LOG</div><div id="log">Prototype loaded. Use the test buttons, or connect Moblin speech input.</div>
+  </section>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+function log(s){$('log').innerHTML=(new Date().toLocaleTimeString()+' — '+String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))+'<br>')+$('log').innerHTML;}
+function speak(text){
+  try{
+    if(!('speechSynthesis' in window)){log('Speech synthesis unavailable in this browser.');return;}
+    window.speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text);u.lang='en-GB';u.rate=.96;window.speechSynthesis.speak(u);
+  }catch(e){log('Voice error: '+e.message);}
+}
+function show(k,t,body,isMap=false){
+  $('overlay').style.display='block';$('overlayKicker').textContent=k;$('overlayTitle').textContent=t;$('overlayText').textContent=body;
+  $('map').classList.toggle('hidden',!isMap);
+}
+function demo(raw){
+  const s=String(raw||'').toLowerCase().trim();if(!s)return;
+  $('heard').textContent=raw;$('status').textContent='COMMAND RECEIVED';log('Heard: '+raw);
+  if(s.includes('hide')||s.includes('clear')||s.includes('remove')){
+    $('overlay').style.display='none';$('status').textContent='GRAPHICS CLEARED';speak('Certainly. Graphics cleared.');return;
+  }
+  if(s.includes('map')||s.includes('where are we')){
+    show('LOCATION DISPLAY','SWEDEN — MAP MODE','This is a demonstration map graphic. Live GPS is not connected yet.',true);
+    $('status').textContent='MAP GRAPHIC DISPLAYED';speak('Certainly. Here is the map display.');return;
+  }
+  if(s.includes('weather')){
+    show('WEATHER','WEATHER DISPLAY','Weather data is not connected in this first prototype.');
+    $('status').textContent='WEATHER GRAPHIC DISPLAYED';speak('Here is the weather panel. Live weather data will be added later.');return;
+  }
+  if(s.includes('fact')||s.includes('sweden')||s.includes('tell me')){
+    show('SWEDEN EXPLAINED','A COUNTRY OF LAKES','Sweden is home to tens of thousands of lakes, vast forests and a long Baltic coastline.');
+    $('status').textContent='FACT GRAPHIC DISPLAYED';speak('Certainly. Sweden has tens of thousands of lakes, vast forests and a long Baltic coastline.');return;
+  }
+  show('BUTLER RESPONSE','COMMAND UNDERSTOOD','I heard you say: '+raw+'. This prototype currently supports map, facts, weather and hide commands.');
+  $('status').textContent='COMMAND PARTIALLY UNDERSTOOD';speak('I heard you say '+raw+'. This command is not configured yet.');
+}
+window.demo=demo;
+
+// Official Moblin Browser Widget speech-to-text API.
+// Moblin sends a sliding transcript window with an absolute character position.
+// We collect the final phrase and execute it when Moblin signals a silence/clear.
+let pendingTranscript = '';
+let lastTranscriptEnd = 0;
+if (window.moblin && typeof window.moblin.subscribe === 'function') {
+  window.moblin.subscribe({ speechToText: {} });
+  window.moblin.onmessage = (message) => {
+    if (message.speechToText !== undefined) {
+      const part = message.speechToText;
+      const text = String(part.text || '');
+      const position = Number(part.position || 0);
+      const offset = Math.max(0, lastTranscriptEnd - position);
+      const addition = position <= lastTranscriptEnd ? text.slice(offset) : text;
+      pendingTranscript += addition;
+      lastTranscriptEnd = Math.max(lastTranscriptEnd, position + text.length);
+      $('heard').textContent = pendingTranscript || text;
+      $('status').textContent = 'LISTENING — transcript received';
+    }
+    if (message.speechToTextClear !== undefined) {
+      const finalPhrase = pendingTranscript.trim();
+      pendingTranscript = '';
+      lastTranscriptEnd = 0;
+      if (finalPhrase) demo(finalPhrase);
+    }
+  };
+  if (typeof window.moblin.log === 'function') {
+    window.moblin.log('Live from Sweden Butler test connected to speech-to-text.');
+  }
+  log('Connected to Moblin speech-to-text API.');
+} else {
+  log('Moblin API not detected. Test buttons still work in Safari; open this page as a Moblin Browser Widget to test voice input.');
+}
+log('Browser speech synthesis: '+('speechSynthesis' in window?'available':'not detected'));
+</script>
+</body>
+</html>
